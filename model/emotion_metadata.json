@@ -1,0 +1,16 @@
+{
+  "raw_labels": ["Angry", "Fear", "Happy", "Sad", "Surprise"],
+  "labels": ["Angry", "Fear", "Happy", "Sad", "Surprise"],
+  "folder_labels": ["Angry", "Fear", "Happy", "Sad", "Surprise"],
+  "input_size": [48, 48],
+  "color_mode": "grayscale",
+  "confidence_threshold": 0.35,
+  "image_confidence_threshold": 0.30,
+  "image_confidence_margin": 0.00,
+  "confidence_margin": 0.01,
+  "webcam_confidence_threshold": 0.30,
+  "webcam_confidence_margin": 0.01,
+  "webcam_promotion_threshold": 0.25,
+  "webcam_stability_frames": 3,
+  "model_path": "model/emotion_model.h5"
+}

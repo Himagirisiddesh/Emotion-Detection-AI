@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmotionLens Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=static_version) }}">
+</head>
+<body>
+    <div class="page-noise"></div>
+
+    <div class="loading-overlay" data-loading>
+        <div class="loader-card">
+            <span class="loader-ring"></span>
+            <h3>Emotion analysis in progress</h3>
+            <p data-loading-text>Detecting faces and predicting emotions...</p>
+        </div>
+    </div>
+
+    <main class="shell">
+        <header class="topbar card">
+            <div class="brand-block">
+                <div class="brand-icon">AI</div>
+                <div>
+                    <p class="eyebrow">Production-Style Emotion Detection</p>
+                    <h1>EmotionLens Pro</h1>
+                </div>
+            </div>
+            <div class="status-cluster">
+                <span class="chip chip-mint">{{ "Model Ready" if model_ready else "Model Missing" }}</span>
+                <span class="chip">{{ model_name }}</span>
+                <span class="chip chip-mint">{{ "Text Model Ready" if text_model_ready else "Text Model Missing" }}</span>
+                <span class="chip">{{ text_model_name }}</span>
+            </div>
+        </header>
+
+        <section class="hero-grid">
+            <article class="hero-copy card">
+                <p class="section-label">Multimodal Stress Detection</p>
+                <h2>Fuse facial emotion with binary text stress detection to estimate stress from webcam or uploaded images.</h2>
+                <p class="hero-text">
+                    The browser captures webcam frames with <code>getUserMedia</code>, Flask predicts facial emotion,
+                    and the text model tells you clearly whether the person looks stressed or not stressed from the written input.
+                </p>
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <strong>Browser Camera</strong>
+                        <span>Live face emotion signal</span>
+                    </div>
+                    <div class="metric-card">
+                        <strong>Text Model</strong>
+                        <span>Stress or No Stress</span>
+                    </div>
+                    <div class="metric-card">
+                        <strong>Final Stress</strong>
+                        <span>Low, Medium, or High</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="hero-visual card">
+                <div class="spotlight"></div>
+                <div class="visual-panel">
+                    <div class="scan-box"></div>
+                    <div class="scan-copy">
+                        <span>Live system capabilities</span>
+                        <ul>
+                            <li>Webcam face emotion detection using your existing CNN model</li>
+                            <li>TF-IDF + Logistic Regression binary text stress classification</li>
+                            <li>Combined face and text stress scoring for clean demo output</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        {% if status_message %}
+        <section class="flash flash-success card">
+            <strong>Success</strong>
+            <p>{{ status_message }}</p>
+        </section>
+        {% endif %}
+
+        {% if error_message %}
+        <section class="flash flash-error card">
+            <strong>Attention</strong>
+            <p>{{ error_message }}</p>
+        </section>
+        {% endif %}
+
+        <section class="action-grid">
+            <article class="card action-card">
+                <div class="card-head">
+                    <div>
+                        <p class="section-label">Step 1</p>
+                        <h3>Upload Image</h3>
+                    </div>
+                    <span class="card-tag">Face analysis</span>
+                </div>
+                <p class="card-copy">
+                    Upload a front-facing photo to run face detection and emotion prediction.
+                    Use the standalone text section below when you want a text-based stress result.
+                </p>
+
+                <form action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data" class="stack" data-load-form>
+                    <label for="image" class="upload-zone">
+                        <input id="image" type="file" name="image" accept="image/*" required>
+                        <span class="upload-title">Choose an image</span>
+                        <small data-file-name>JPG, PNG, BMP, or WEBP up to 8 MB</small>
+                    </label>
+                    <button class="primary-btn" type="submit" data-loading-message="Analyzing image and face emotion...">
+                        Analyze Image
+                    </button>
+                </form>
+            </article>
+
+            <article class="card action-card accent-card">
+                <div class="card-head">
+                    <div>
+                        <p class="section-label">Step 2</p>
+                        <h3>Start Browser Webcam</h3>
+                    </div>
+                    <span class="card-tag">Live webcam mode</span>
+                </div>
+                <p class="card-copy">
+                    Start the webcam directly in the browser to run live face emotion detection from the camera feed.
+                </p>
+
+                <div class="camera-controls">
+                    <button type="button" class="secondary-btn" data-start-camera>Start Camera</button>
+                    <button type="button" class="ghost-btn" data-stop-camera disabled>Stop Camera</button>
+                </div>
+
+                <div class="quick-notes">
+                    <span>Use <strong>http://127.0.0.1:5000</strong> or <strong>localhost</strong> so browser camera access works smoothly.</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="card text-analysis-card">
+            <div class="card-head">
+                <div>
+                    <p class="section-label">Text Analysis</p>
+                    <h3>Standalone Text Stress Detection</h3>
+                </div>
+                <span class="card-tag">Text only</span>
+            </div>
+
+            <p class="card-copy">
+                Analyze written input independently from image upload and webcam mode. This sends only text to the
+                Flask <code>/predict-text</code> route and shows the final text stress result below.
+            </p>
+
+            <div class="text-analysis-grid">
+                <label class="text-entry">
+                    <span class="upload-title">How are you feeling?</span>
+                    <textarea
+                        id="standaloneStressText"
+                        class="text-area"
+                        rows="5"
+                        placeholder="Enter how you feel..."
+                    ></textarea>
+                </label>
+
+                <div class="text-analysis-actions">
+                    <button type="button" class="primary-btn" data-analyze-text>Analyze Text</button>
+                    <p class="quick-example">Example: I feel very tired and stressed</p>
+                </div>
+
+                <div class="text-analysis-result">
+                    <div class="empty-state" data-text-result-empty>
+                        <p>Type your message and click <strong>Analyze Text</strong> to run text-only stress detection.</p>
+                    </div>
+
+                    <p class="text-result-message" data-text-result-message hidden></p>
+
+                    <div class="summary-grid text-result-summary" data-text-result-summary hidden>
+                        <div class="summary-card">
+                            <span>Stress Status</span>
+                            <strong data-text-result-label>Waiting</strong>
+                            <small>Shows only: Stressed or Not Stressed</small>
+                        </div>
+                        <div class="summary-card">
+                            <span>Confidence</span>
+                            <strong data-text-result-confidence>0%</strong>
+                            <small>Model confidence for the final text label</small>
+                        </div>
+                        <div class="summary-card stress-summary">
+                            <span>Stress Level</span>
+                            <strong data-text-result-level>Waiting</strong>
+                            <small>Mapped from the text prediction result</small>
+                        </div>
+                    </div>
+                    
+                    <div data-text-result-hint hidden style="margin-top: 1rem; padding: 0.85rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 0.5rem; color: #ef4444; font-size: 0.95rem; text-align: center;">
+                        Low confidence &mdash; try describing your feelings in more detail for a better result.
+                    </div>
+
+                    <section class="text-detail-card" data-text-support-card hidden>
+                        <p class="text-detail-label">Support Message</p>
+                        <p class="text-detail-copy" data-text-support-message></p>
+                    </section>
+
+                    <section class="text-detail-card" data-text-suggestions-card hidden>
+                        <p class="text-detail-label">Helpful Suggestions</p>
+                        <ul class="suggestion-list" data-text-suggestions></ul>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section class="card bio-analysis-card" style="margin-top: 2rem;">
+            <div class="card-head">
+                <div>
+                    <p class="section-label">Physiological Analysis</p>
+                    <h3>Biometric Stress Detection</h3>
+                </div>
+                <span class="card-tag">Sliders</span>
+            </div>
+
+            <p class="card-copy">
+                Tune the physiological parameters to simulate biometric sensor input and receive Real-time Random Forest predictions.
+            </p>
+
+            <div class="bio-analysis-grid">
+                <div class="bio-sliders">
+                    <label style="display:block; margin-bottom: 1.5rem;">
+                        <span style="display:flex; justify-content:space-between; margin-bottom: 0.5rem; font-weight:600;">Heart Rate (BPM) <span id="hr-val" style="color:var(--brand-primary, #60a5fa); font-weight:700;">75</span></span>
+                        <input type="range" id="hr-slider" min="60" max="120" value="75" style="width:100%;">
+                    </label>
+                    <label style="display:block; margin-bottom: 1.5rem;">
+                        <span style="display:flex; justify-content:space-between; margin-bottom: 0.5rem; font-weight:600;">EDA (μS) <span id="eda-val" style="color:var(--brand-primary, #60a5fa); font-weight:700;">3.0</span></span>
+                        <input type="range" id="eda-slider" min="1" max="10" value="3.0" step="0.1" style="width:100%;">
+                    </label>
+                    <label style="display:block; margin-bottom: 1.5rem;">
+                        <span style="display:flex; justify-content:space-between; margin-bottom: 0.5rem; font-weight:600;">Respiration (RPM) <span id="resp-val" style="color:var(--brand-primary, #60a5fa); font-weight:700;">15</span></span>
+                        <input type="range" id="resp-slider" min="10" max="25" value="15" style="width:100%;">
+                    </label>
+                    <label style="display:block; margin-bottom: 2rem;">
+                        <span style="display:flex; justify-content:space-between; margin-bottom: 0.5rem; font-weight:600;">Temperature (°C) <span id="temp-val" style="color:var(--brand-primary, #60a5fa); font-weight:700;">36.5</span></span>
+                        <input type="range" id="temp-slider" min="35" max="38" value="36.5" step="0.1" style="width:100%;">
+                    </label>
+
+                    <button type="button" class="primary-btn" id="predict-bio-btn" style="width: 100%;">Predict Stress</button>
+                </div>
+
+                <div class="bio-analysis-result">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary, #9ca3af); font-weight:600; text-transform:uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">Result</h4>
+                    <div id="bio-result-box" style="padding: 2.5rem; border-radius: 1rem; min-width: 240px; border: 2px dashed var(--border-color, #374151); transition: all 0.3s; display:flex; flex-direction:column; justify-content:center; align-items:center; background-color: rgba(55, 65, 81, 0.2);">
+                        <strong id="bio-stress-label" style="display:block; font-size: 2.5rem; margin-bottom: 0.5rem;">Awaiting</strong>
+                        <small id="bio-confidence-label" style="color:var(--text-secondary, #9ca3af); font-size: 1rem;">Adjust sliders and predict</small>
+                    </div>
+                </div>
+            </div>
+            <style>
+                .bio-analysis-grid { display: flex; align-items: stretch; margin-top: 1.5rem; gap: 2rem; }
+                .bio-sliders { flex: 1; }
+                .bio-analysis-result { flex: 1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+                @media (max-width: 768px) {
+                    .bio-analysis-grid { flex-direction: column; }
+                    .bio-analysis-result { padding-top: 2rem; border-top: 1px solid var(--border-color, #374151); width: 100%; }
+                }
+            </style>
+        </section>
+
+        <section class="webcam-grid">
+            <article class="card webcam-stage-card">
+                <div class="card-head">
+                    <div>
+                        <p class="section-label">Live Webcam Detection</p>
+                        <h3>Browser Video Stream</h3>
+                    </div>
+                    <span class="card-tag">In-page camera</span>
+                </div>
+
+                <div class="webcam-stage">
+                    <video id="webcamVideo" autoplay playsinline muted></video>
+                    <canvas id="webcamOverlay"></canvas>
+                    <div class="camera-placeholder" data-camera-placeholder>
+                        Click <strong>Start Camera</strong> to begin real-time emotion detection inside this webpage.
+                    </div>
+                </div>
+            </article>
+
+            <article class="card live-panel">
+                <div class="card-head">
+                    <div>
+                        <p class="section-label">Live Results</p>
+                        <h3>Current Webcam Analysis</h3>
+                    </div>
+                    <span class="card-tag">Real-time API</span>
+                </div>
+
+                <div class="live-stats">
+                    <div class="live-stat-card">
+                        <span>Status</span>
+                        <strong data-camera-status>Idle</strong>
+                    </div>
+                    <div class="live-stat-card">
+                        <span>Faces</span>
+                        <strong data-live-face-count>0</strong>
+                    </div>
+                    <div class="live-stat-card">
+                        <span>Latency</span>
+                        <strong data-live-latency>0 ms</strong>
+                    </div>
+                    <div class="live-stat-card">
+                        <span>Face Emotion</span>
+                        <strong data-live-face-emotion>Waiting</strong>
+                    </div>
+                    <div class="live-stat-card">
+                        <span>Final Stress</span>
+                        <strong data-live-stress-level>Waiting</strong>
+                    </div>
+                </div>
+
+                <div class="empty-state" data-live-empty>
+                    <p>Live face, text, and stress results will appear here after the browser camera starts.</p>
+                </div>
+
+                <div class="face-list face-list-live" data-live-face-list hidden></div>
+            </article>
+        </section>
+
+        <section class="results-grid">
+            <article class="card result-overview">
+                <div class="card-head">
+                    <div>
+                        <p class="section-label">Uploaded Image Output</p>
+                        <h3>Face Emotion Results</h3>
+                    </div>
+                    {% if result %}
+                    <span class="card-tag">{{ result.faces_detected }} face{{ "" if result.faces_detected == 1 else "s" }}</span>
+                    {% else %}
+                    <span class="card-tag">Awaiting input</span>
+                    {% endif %}
+                </div>
+
+                {% if result %}
+                <div class="hero-result">
+                    <div class="emotion-pill">
+                        <span class="emoji">{{ result.primary.emoji }}</span>
+                        <div>
+                            <strong>{{ result.primary.result_text }}</strong>
+                            <small>Face emotion result</small>
+                        </div>
+                    </div>
+                    <p class="result-copy">{{ result.message }}</p>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <span>Face Emotion</span>
+                        <strong>{{ result.primary.result_display }}</strong>
+                        <small>From your facial emotion model</small>
+                    </div>
+                    <div class="summary-card">
+                        <span>Confidence</span>
+                        <strong>{{ result.primary.confidence_text }}</strong>
+                        <small>Confidence for the main face emotion prediction</small>
+                    </div>
+                    <div class="summary-card stress-summary">
+                        <span>Faces Detected</span>
+                        <strong>{{ result.faces_detected }}</strong>
+                        <small>Number of faces found in the uploaded image</small>
+                    </div>
+                </div>
+
+                <div class="face-list">
+                    {% for detection in result.detections %}
+                    <div class="face-card">
+                        <div class="face-card-head">
+                            <strong>Face {{ loop.index }}</strong>
+                            <span>{{ detection.result_display }}</span>
+                        </div>
+                        <p class="face-confidence">Stable final output for demo mode</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>Upload an image to see the detected face emotion and annotated preview.</p>
+                </div>
+                {% endif %}
+            </article>
+
+            <article class="card preview-panel">
+                <div class="card-head">
+                    <div>
+                        <p class="section-label">Visual Preview</p>
+                        <h3>Original and Annotated Images</h3>
+                    </div>
+                    <span class="card-tag">Bounding boxes</span>
+                </div>
+
+                <div class="preview-grid">
+                    <div class="preview-card">
+                        <p>Uploaded Image</p>
+                        {% if uploaded_image %}
+                        <img src="{{ url_for('static', filename=uploaded_image) }}" alt="Uploaded image preview">
+                        {% else %}
+                        <div class="preview-placeholder">Your uploaded image will appear here.</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="preview-card">
+                        <p>Detected Faces + Emotion</p>
+                        {% if annotated_image %}
+                        <img src="{{ url_for('static', filename=annotated_image) }}" alt="Annotated prediction preview">
+                        {% else %}
+                        <div class="preview-placeholder">The annotated prediction output will appear here.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js', v=static_version) }}"></script>
+</body>
+</html>

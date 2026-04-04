@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "../__pycache__"
+		},
+		{
+			"path": "../archive (2)"
+		},
+		{
+			"path": "../model"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../templates"
+		},
+		{
+			"path": "../text classification"
+		}
+	]
+}
