@@ -1,152 +1,117 @@
-# EmotionLens Pro
+🧠 Emotion Detection AI
 
-EmotionLens Pro is a multimodal stress detection system built with Python, TensorFlow/Keras, OpenCV, Flask, HTML, and JavaScript. It combines a facial emotion model with a binary text-based stress classifier so the app can estimate stress from uploaded images, browser webcam frames, and typed text in one clean workflow.
+An AI-powered system that detects human emotions in real-time using **Computer Vision** and **Deep Learning techniques**. This project leverages a Convolutional Neural Network (CNN) to analyze facial expressions and classify emotions accurately.
 
-## Features
+📌 Overview
 
-- Facial emotion detection with OpenCV Haarcascade face detection
-- Browser webcam streaming with `getUserMedia`
-- Text-based stress detection trained from `Stress.csv`
-- Multimodal stress fusion from face score and text score
-- Live in-browser overlays for face emotion and confidence
-- Clean Flask UI for upload + webcam + text analysis
-- Saved model artifacts for both face and text pipelines
+Understanding human emotions is a crucial aspect of Human-Computer Interaction. This project aims to build a real-time emotion detection system that can identify facial expressions through a webcam feed.
 
-## Project Structure
+The model is trained on labeled facial expression datasets and can classify emotions such as:
 
-```text
-ML/
-|-- app.py
-|-- emotion_utils.py
-|-- stress_text_utils.py
-|-- stress_history.py
-|-- evaluate.py
-|-- train_model.py
-|-- train_text_model.py
-|-- bio_model_training.py
-|-- predict.py
-|-- webcam.py
-|-- requirements.txt
-|-- README.md
-|-- model/
-|   |-- emotion_metadata.json
-|   |-- emotion_model.h5
-|   |-- text_stress_metadata.json
-|   `-- text_stress_model.pkl
-|-- static/
-|   |-- app.js
-|   |-- style.css
-|   |-- processed/
-|   `-- uploads/
-`-- templates/
-    `-- index.html
-```
+1. 😄 Happy
+2. 😢 Sad
+3. 😡 Angry
+4. 😲 Surprise
+5. 😐 Neutral
+6. 😱 Fear
+7. 🤢 Disgust
 
-## Main Files
+🚀 Features
 
-- `app.py`: Flask routes for upload prediction, browser webcam frames, and text-only prediction.
-- `emotion_utils.py`: Face model loading, face detection, preprocessing, emotion prediction, annotation, and webcam smoothing.
-- `stress_text_utils.py`: Text cleaning, binary text fusion, and Confidence-Weighted multi-modal stress score fusion.
-- `stress_history.py`: Temporal state tracking and trend evaluation.
-- `evaluate.py`: Multi-modality dataset benchmarking utility (`python evaluate.py --test-csv`).
-- `train_model.py`: CNN training script for facial emotion detection.
-- `bio_model_training.py`: Physiological pipeline estimator builder.
-- `train_text_model.py`: `Stress.csv` training script for TF-IDF/CountVectorizer-based binary text stress detection.
-- `templates/index.html`: Main multimodal UI.
-- `static/app.js`: Browser webcam capture, live frame upload, and live result rendering.
-- `static/style.css`: Modern UI styling.
+* 🎥 Real-time emotion detection via webcam
+* 🧠 Deep learning-based classification (CNN)
+* 👁️ Face detection using Haar Cascade (OpenCV)
+* ⚡ Fast and efficient prediction pipeline
+* 🖥️ Easy-to-run Python application
 
-## Install
+ 🛠️ Tech Stack
 
-```bash
+| Category        | Technologies Used  |
+| --------------- | ------------------ |
+| Programming     | Python             |
+| Deep Learning   | TensorFlow / Keras |
+| Computer Vision | OpenCV             |
+| Data Handling   | NumPy, Pandas      |
+| Visualization   | Matplotlib         |
+
+
+ 📂 Project Structure
+
+
+Emotion-Detection-AI/
+│
+├── dataset/               # Dataset for training
+├── model/                 # Saved trained model (.h5)
+├── haarcascade/           # Haar Cascade XML files
+├── app.py / main.py       # Main application script
+├── train_model.py         # Model training script
+├── requirements.txt       # Required libraries
+└── README.md              # Project documentation
+
+
+⚙️ Installation & Setup
+
+1️⃣ Clone the repository
+
+
+git clone https://github.com/Himagirisiddesh/Emotion-Detection-AI.git
+cd Emotion-Detection-AI
+
+2️⃣ Install dependencies
+
+
 pip install -r requirements.txt
-```
 
-## Train the Text Model
+▶️ How to Run
 
-```bash
-python train_text_model.py
-```
-
-Default dataset:
-
-```text
-C:\Users\chand\OneDrive\Desktop\stress\Stress.csv
-```
-
-Expected columns:
-
-- `text`
-- `label` where `0 = no stress` and `1 = stress`
-
-Outputs:
-
-- `model/text_stress_model.pkl`
-- `model/text_stress_metadata.json`
-
-## Train the Face Model
-
-```bash
-python train_model.py
-```
-
-## Run the App
-
-```bash
 python app.py
-```
 
-Open:
+✔️ Webcam will open
+✔️ Face will be detected
+✔️ Emotion will be displayed in real-time
 
-```text
-http://127.0.0.1:5000
-```
+🧪 Model Details
 
-## Demo Flow
+* Model Type: Convolutional Neural Network (CNN)
+* Input Shape: 48x48 grayscale images
+* Dataset: FER-2013 / Custom dataset
+* Output Classes: 7 emotions
 
-1. Start the Flask app with `python app.py`
-2. Upload an image to review face emotion
-3. Use the standalone text section or live webcam text box for text stress detection
-4. Start the browser camera
-5. Type live text while webcam detection runs
-6. Watch the multimodal result update inside the page
+📊 Results
 
-## Evaluate Models
+| Metric              | Value |
+| ------------------- | ----- |
+| Training Accuracy   | XX%   |
+| Validation Accuracy | XX%   |
 
-To test all the modalities (Face, Text, Bio, Ensemble) and generate performance analytics against true labels:
-```bash
-python evaluate.py --test-csv your_test_data.csv
-```
+📌 *Update these values based on your trained model results*
 
-## Stress Mapping
 
-Face scores:
+## 💡 Future Enhancements
 
-- Happy -> 0
-- Neutral -> 0
-- Sad -> 1
-- Surprise -> 1
-- Angry -> 2
-- Fear -> 2
+* 🔊 Voice-based emotion detection
+* 📝 Text-based sentiment analysis
+* 🧠 Multimodal stress detection system
+* 🌐 Deploy as a web application (Flask / Streamlit)
+* 📱 Mobile app integration
 
-Text scores:
+🤝 Contribution
 
-- No Stress -> 0
-- Stress -> 2
+Contributions are welcome!
+Feel free to fork this repository and submit pull requests.
 
-Bio scores:
+📜 License
 
-- Not Stressed -> 0
-- Stressed -> 2
+This project is licensed under the MIT License.
 
-Final stress score:
+👨‍💻 Author
 
-- Confidence-weighted fusion replaces simple average.
-- Each modality's score is weighted by its prediction confidence.
-- Falls back to single-modality scoring or simple average if weights are zero.
+Himagiri Siddesh M
 
-Stress levels:
+* 📧 Email: himagirisiddesh@email.com
+* 🔗 LinkedIn: https://www.linkedin.com/in/himagiri-siddesh-m-532b102a3/
+* 💻 GitHub: https://github.com/Himagirisiddesh
 
-- Low: score < 1.0
-- Medium: 1.0 to < 2.0
-- High: 2.0 and above
+⭐ Support
+
+If you like this project, give it a ⭐ on GitHub!
